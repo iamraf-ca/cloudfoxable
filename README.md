@@ -15,6 +15,106 @@ Similar to [CloudGoat](https://github.com/RhinoSecurityLabs/cloudgoat) and [IAM-
 
 * Total number of challenges:    18
 
+
+# Terraform Setup & Basic Usage
+
+CloudFoxable uses **Terraform** to deploy and manage intentionally vulnerable AWS infrastructure. This section provides the minimum required guidance to get Terraform installed and to deploy, modify, and remove CloudFoxable resources.
+<details>
+    <summary>Click to expand</summary>
+    
+### Install Terraform
+
+Terraform must be installed locally before deploying CloudFoxable.
+
+Follow the official HashiCorp installation guide for your operating system:
+
+https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli
+
+Verify the installation:
+
+```bash
+terraform version
+
+```
+
+A successful install will print the Terraform version.
+
+### Prerequisites
+
+Before running Terraform:
+
+* You must have access to an AWS account you control.
+* AWS credentials must be configured locally (for example, via `aws configure`, environment variables, or an assumed role).
+* You should expect Terraform to create and destroy AWS resources in that account.
+
+**Important:** CloudFoxable deploys intentionally vulnerable infrastructure.
+Do not deploy this in production, shared, or corporate AWS accounts.
+
+
+
+### Terraform Workflow
+
+All Terraform commands should be run from the following directory:
+
+```bash
+cd cloudfoxable/aws
+```
+
+#### Initialize Terraform
+
+Initialize the working directory and download required providers:
+
+```bash
+terraform init
+```
+
+This is required once per workspace (or when provider configuration changes).
+
+
+
+#### Preview Changes (Optional)
+
+To review what Terraform will create, modify, or destroy:
+
+```bash
+terraform plan
+```
+
+
+
+#### Deploy CloudFoxable
+
+To deploy the currently enabled challenges:
+
+```bash
+terraform apply
+```
+
+Type `yes` when prompted to confirm.
+
+
+
+#### Destroy All Resources (Cleanup)
+
+To remove all CloudFoxable-created resources:
+
+```bash
+terraform destroy
+```
+
+Confirm with `yes` when prompted.
+
+### Common Terraform Commands
+
+| Command             | Description                          |
+| ------------------- | ------------------------------------ |
+| `terraform init`    | Initialize the Terraform project     |
+| `terraform plan`    | Show proposed infrastructure changes |
+| `terraform apply`   | Create or update resources           |
+| `terraform destroy` | Remove all deployed resources        |
+
+</details>
+
 # A Modular Approach
 
 Similar to IAM-Vulnerable, some challenges are enabled by default (the ones that have little or no cost implications), and others are disabled by default (the ones that incur cost if deployed). This way, you can enable specific modules as needed. The mechanism for enabling/disabling challenges is a little different than IAM-Vulnerable though. 
@@ -56,6 +156,40 @@ You have now deployed the mallory challenge.
 Whenever you want to remove all of the CloudFoxable-created resources, you can run these commands:
 1. `cd cloudfoxable/aws`
 1. `terraform destroy`
+
+
+# Build with Docker
+
+If you're using **Windows**, you might encounter issues when deploying some of the challenges due to platform-specific limitations. To avoid this, a Dockerfile is provided to help you build and run the application in a consistent environment across different systems.
+
+<details>
+    <summary>Click to expand</summary>
+
+## Clone the Repository
+
+Start by cloning the repository to your local machine:
+
+```bash
+git clone https://github.com/BishopFox/cloudfoxable.git
+cd cloudfoxable
+```
+
+## Build the Docker Image
+Once you have cloned the repository, build the Docker image with the following command. This will ensure that you are using a fresh build without any cached layers:
+```bash
+docker build --no-cache -t cloudfoxable .
+```
+
+### Run Docker on Windows with PowerShell
+If you're on Windows, use the following PowerShell command to run the Docker container. This will:
+- Mount your AWS credentials file to the container for persistence.
+- Mount your Terraform (state) file(s) to the container for persistence. You can directly edit **terraform.tfvars** in the container by means of **nano** and it will be replicated to your host by means of the bind mount.
+- Start an interactive session where you can run Terraform commands.
+```pwsh
+cd aws
+docker run -it -v $env:USERPROFILE/.aws/credentials:/root/.aws/credentials -v ${PWD}:/cloudfoxable/aws cloudfoxable
+```
+</details>
 
 # Hungry for more? 
 
